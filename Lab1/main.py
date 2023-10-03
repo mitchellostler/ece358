@@ -55,7 +55,6 @@ def GenerateEventList(sim_time, packet_length, transmission_rate, queue_max):
                     else:
                         events[arrival_index][0] = DROPPED
 
-
                     arrival_index += 1
                 else:
                     break
@@ -81,7 +80,7 @@ if __name__ == "__main__":
     events = GenerateEventList(T, L, C, queueSize)
 
     Na = Nd = No = Ndrop = num_packets = 0
-    for event in events:
+    for i, event in enumerate(events):
         if event[0] == ARRIVAL:
             Na += 1
             num_packets += 1
@@ -90,10 +89,12 @@ if __name__ == "__main__":
             num_packets -=1
         elif event[0] == DROPPED:
             Ndrop += 1
-            num_packets -= 1
         else:
             No += 1
             # Calculate Pidle & Ploss
+            if num_packets == 0:
+                # add pidle
+
             
 
             
