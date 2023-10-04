@@ -9,6 +9,16 @@ DROPPED = 3
 def GenerateX(lamb):
     return -1 / lamb * math.log(1-random.random())
 
+def CalcMeanAndVariance(lamb):
+    #Calculate mean and variance of GenerateX function
+    variables = []
+    for i in range(1000):
+        variables.append(GenerateX(lamb))
+    meanX = sum(variables)/1000
+    res = sum((i - meanX) ** 2 for i in variables) / len(variables)
+    print(res) # this is variance
+    print(meanX)
+
 def Sort_Tuple(tup):
  
     # reverse = None (Sorts in Ascending order)
@@ -20,16 +30,16 @@ def Sort_Tuple(tup):
 # Length of packets in bits
 # C = The transmission rate of the output link in bits per second.
 def GenerateServiceTime(L, C):
-    # Service time is C / L
+    # Service time is L / C
     return GenerateX(1/L) / C
 
-def GenerateEventList(sim_time, packet_length, transmission_rate, queue_max):
+def GenerateEventList(T, L, C, queue_max):
     events = []
     # Generate Arrival Events
     time = 0
     while(time < T):
         time = time + GenerateX(lamb)
-        events.append((ARRIVAL, time)) 
+        events.append([ARRIVAL, time]) 
     # Generate Departures
     time = 0
     num_pkts_in_queue = 0
@@ -45,11 +55,11 @@ def GenerateEventList(sim_time, packet_length, transmission_rate, queue_max):
         elif num_pkts_in_queue > 0:
             # Calculate departure times, catching up to current time
             next_departure_time = GenerateServiceTime(L, C) + last_departure_time
-            departure_events.append((DEPARTURE, next_departure_time))
+            departure_events.append([DEPARTURE, next_departure_time])
             time = next_departure_time
             num_pkts_in_queue -= 1
             while (True):
-                if events[arrival_index][1] <= time:
+                if events[arrival_index][1] <= time: # this indexerrors sometimes
                     if not queue_max or num_pkts_in_queue < queue_max:
                         num_pkts_in_queue += 1
                     else:
@@ -64,11 +74,40 @@ def GenerateEventList(sim_time, packet_length, transmission_rate, queue_max):
     time = 0
     while(time < T):
         time = time + GenerateX(5*lamb)
-        events.append((OBSERVER, time)) 
+        events.append([OBSERVER, time]) 
 
     # Sort events
     Sort_Tuple(events)
     return events
+
+def CalculateMetrics(events):
+    Na = Nd = No = Ndrop = num_pkts_in_queue = Tidle = last_departure_time = 0
+    E = []
+    for i, event in enumerate(events):
+        if event[0] == ARRIVAL:
+            Na += 1
+            num_pkts_in_queue += 1
+        elif event[0] == DEPARTURE:
+            Nd += 1
+            num_pkts_in_queue -=1
+            last_departure_time = event[1]
+        elif event[0] == DROPPED:
+            Ndrop += 1
+        elif event[0] == OBSERVER:
+            No += 1
+            # Record time-average of number of packets in queue E[N]
+            E.append(num_pkts_in_queue)
+            # Sum up idle time
+            if num_pkts_in_queue == 0:
+                Tidle += event[1] - last_departure_time
+                last_departure_time = event[1]
+
+    Pidle = Tidle / T
+    Ploss = Ndrop / Na
+    Eavg = sum(E) / len(E)
+
+    return {"Pidle": Pidle, "Ploss": Ploss, "Eavg": Eavg}
+
 
 
 if __name__ == "__main__":
@@ -79,33 +118,6 @@ if __name__ == "__main__":
     queueSize = None # None is infinite queue
     events = GenerateEventList(T, L, C, queueSize)
 
-    Na = Nd = No = Ndrop = num_packets = 0
-    for i, event in enumerate(events):
-        if event[0] == ARRIVAL:
-            Na += 1
-            num_packets += 1
-        elif event[0] == DEPARTURE:
-            Nd += 1
-            num_packets -=1
-        elif event[0] == DROPPED:
-            Ndrop += 1
-        else:
-            No += 1
-            # Calculate Pidle & Ploss
-            if num_packets == 0:
-                # add pidle
-
-            
-
-            
-    Ploss = Ndrop / Na
-            
-
-    # Calculate mean and variance of GenerateX function
-    #variables = []
-    #for i in range(1000):
-    #    variables.append(GenerateX(lamb))
-    #meanX = sum(variables)/1000
-    #res = sum((i - meanX) ** 2 for i in variables) / len(variables)
-    #print(res) # this is variance
-    #print(meanX)
+    metrics = CalculateMetrics(events)
+    print(metrics)
+    
