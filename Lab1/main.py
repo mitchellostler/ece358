@@ -125,7 +125,7 @@ def q1(lamb):
 
 def q3():
     print("Q3: ")
-    T = 5 #1000
+    T = 1000 #1000
     L = 2000 # avg length of packets in bits
     C = 1e6
     queueSize = None # None is infinite queue
@@ -147,13 +147,14 @@ def q3():
                 f"Ploss: {round(pidle[-1], 2)}")
     
     # plt.plot(rho_values, eavg_vals)
+    # plt.title("Rho vs E[N]")
     # plt.xlabel('Rho')
-    # plt.ylabel('Pidle')
+    # plt.ylabel('E[N]')
     # plt.show()
 
 def q4():
     print("Q4: ")
-    T = 5 #1000
+    T = 1000
     L = 2000 # avg length of packets in bits
     C = 1e6
     queueSize = None # None is infinite queue
@@ -164,7 +165,7 @@ def q4():
 
 def q6():
     print("Q6:")
-    T = 5 #1000
+    T = 1000
     L = 2000 # avg length of packets in bits
     C = 1e6
     Ks = [10, 25, 50]
@@ -186,11 +187,11 @@ def q6():
             ploss_vals.append(mets["Ploss"])
             print(f"Rho: {round(r, 2)}, E[N]: {round(eavg_vals[-1], 2)} "
                 f"Ploss: {round(ploss_vals[-1], 2)}")
-        # plt.plot(rho_values, eavg_vals, label=f"K={k}")
-        # plt.xlabel('Rho')
-        # plt.ylabel('P_loss')
+    #     plt.plot(rho_values, ploss_vals, label=f"K={k}")
+    #     plt.xlabel('Rho')
+    #     plt.ylabel('Ploss')
         
-    # plt.title('P_loss vs Rho values')
+    # plt.title('Ploss vs Rho values')
     # plt.legend(loc='upper left')
     # plt.show()
 
