@@ -35,42 +35,37 @@ def HTTPHeaders(request):
     return headers
 
 if __name__ == "__main__":
+    # create and configure websocket as ipv4, tcp, resuable, and ip:port
     webserver = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
     webserver.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     webserver.bind((HOME_IP_ADDRESS, PORT))
 
     while True:
-        webserver.listen(0)
-        client_socket, client_address = webserver.accept()
+        webserver.listen(0) # inifinite buffer
+        client_socket, client_address = webserver.accept() # wait for incoming connection
 
-        try: 
-            request = client_socket.recv(1024 * 8).decode("utf-8").strip()
-            headers = HTTPHeaders(request=request)
+        request = client_socket.recv(1024).decode("utf-8").strip() # decode bytes to string
+        headers = HTTPHeaders(request=request) # put headers into dict
 
-            response = ""
-            # check if file is found
-            fileName = os.getcwd() + headers["PATH"]
-            filePresent = os.path.isfile(fileName)
+        # check if file is found
+        fileName = os.getcwd() + headers["PATH"]
+        filePresent = os.path.isfile(fileName)
 
-            if filePresent:
-                fileSize = os.stat(fileName).st_size
-                last_modified = time.ctime(os.path.getmtime(fileName))
-                response = STATUS_200 + CreateResponseHeader(content_length=str(fileSize),last_modified=last_modified)
+        if filePresent: # if present, grab contents and create headers for response
+            fileSize = os.stat(fileName).st_size
+            last_modified = time.ctime(os.path.getmtime(fileName))
+            response = STATUS_200 + CreateResponseHeader(content_length=str(fileSize),last_modified=last_modified)
 
-                if headers["METHOD"] == "GET":
-                    # append content
-                    with open(os.getcwd() + headers["PATH"], "r") as file_content:
-                        data = file_content.read()
-                    response += data
-            else:
-                lengthBytes = len("404 Not Found".encode('utf-8'))
-                response = STATUS_404 + CreateResponseHeader(content_length=lengthBytes) 
-                if headers["METHOD"] == "GET":
-                    response += "404 Not Found"
-            
-            client_socket.send(response.encode("utf-8"))
-
-        finally:
-            client_socket.close()
-            # close server socket
-            # webserver.close()
+            if headers["METHOD"] == "GET":
+                with open(os.getcwd() + headers["PATH"], "r") as file_content:
+                    data = file_content.read()
+                response += data # add file content to response
+        else:
+            lengthBytes = len("404 Not Found".encode('utf-8'))
+            response = STATUS_404 + CreateResponseHeader(content_length=lengthBytes) 
+            if headers["METHOD"] == "GET":
+                response += "404 Not Found"
+        
+        client_socket.send(response.encode("utf-8"))
+        client_socket.close()
+        # webserver.close()
